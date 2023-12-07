@@ -2,9 +2,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use chrono::Local;
+use image::imageops::FilterType;
 use image::io::Reader as ImageReader;
 use image::{DynamicImage, EncodableLayout}; // Using image crate: https://github.com/image-rs/image
-use webp::{Encoder, WebPMemory}; // Using webp crate: https://github.com/jaredforth/webp
+use webp::{Encoder, WebPMemory, PixelLayout}; // Using webp crate: https://github.com/jaredforth/webp
 
 use directories::UserDirs;
 use std::fs::create_dir_all;
@@ -62,10 +63,26 @@ fn process_image(file: &Path, directory: &Path) {
         let path: PathBuf = Path::join(directory, format!("{}.webp", file_name.to_str().unwrap()));
 
         if let Ok(mut webp_image) = File::create(path) {
-            let image: DynamicImage = ImageReader::open(&file).unwrap().decode().unwrap();
+			let img: DynamicImage = ImageReader::open(&file).unwrap().decode().unwrap();
+
+			let scaled: DynamicImage = img.resize(1920, 1080, FilterType::Gaussian);
+
+			let pixel_layout = match scaled.color() {
+				image::ColorType::Rgb16 => PixelLayout::Rgb,
+				image::ColorType::Rgb32F => PixelLayout::Rgb,
+				image::ColorType::Rgb8 => PixelLayout::Rgb,
+				image::ColorType::Rgba16 => PixelLayout::Rgba,
+				image::ColorType::Rgba32F => PixelLayout::Rgba,
+				image::ColorType::Rgba8 => PixelLayout::Rgba,
+				// Add more cases if necessary for other color types
+				_ => {
+					// Handle other color types if needed
+					panic!("Unsupported color type");
+				}
+			};
 
             // Make webp::Encoder from DynamicImage
-            let encoder: Encoder = Encoder::from_image(&image).unwrap();
+            let encoder: Encoder = Encoder::new(scaled.as_bytes(), pixel_layout, scaled.width(), scaled.height());
 
             // Encode image into WebPMemory
             let encoded_webp: WebPMemory = encoder.encode(80f32);
