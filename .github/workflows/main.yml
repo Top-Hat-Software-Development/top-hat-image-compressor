@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        settings: ['windows-latest']
+        settings: 'windows-latest'
 
     runs-on: ${{ matrix.settings.platform }}
     steps:
