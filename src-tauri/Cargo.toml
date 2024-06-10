@@ -20,6 +20,7 @@ webp = "0.2.6"
 image = "0.24.7"
 chrono = "0.4.31"
 directories = "5.0.1"
+calamine = "0.23.1"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
